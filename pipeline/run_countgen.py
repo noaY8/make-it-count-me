@@ -24,9 +24,9 @@ def read_yaml(file_path):
     return yaml_data
 
 def move_model_to_cpu(model): #added by noa 08.08.24
-for module in model.modules():
-    if hasattr(module, 'to'):
-        module.to('cpu')
+    for module in model.modules():
+        if hasattr(module, 'to'):
+            module.to('cpu')
             
 def set_seed(seed: int):
     """
