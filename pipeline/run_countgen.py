@@ -17,7 +17,7 @@ from utils.generate_random_masks import generate_random_masks_factory, show_mask
 from tqdm import tqdm
 from torch.cuda.amp import autocast #added by noa 08.08.24
 from accelerate import cpu_offload #added by noa 08.08.24
-from google.cloud import storage #added by noa 08.08.24
+#from google.cloud import storage #added by noa 08.08.24
 
 # Set max split size to reduce fragmentation
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128' #added by noa 08.08.24
@@ -97,8 +97,8 @@ def run_counting_pipeline_corrected_masks(sdxl_pipe, prompt, generator, object_m
                             generator=generator,
                             latents=latents).images
             
-            print("Memory summary after inference:")  # added by noa 08.08.24
-            print(torch.cuda.memory_summary(device='cuda', abbreviated=False))  # added by noa 08.08.24
+            #print("Memory summary after inference:")  # added by noa 08.08.24
+            #print(torch.cuda.memory_summary(device='cuda', abbreviated=False))  # added by noa 08.08.24
 
 
     image = out[0]
@@ -166,13 +166,13 @@ def run_pipeline(prompt_objects, config, phase1_type, phase2_type):
             elif phase2_type == 'vanilla':
                 pass
                 
-        local_file_path = f"{out_dir}/{img_id}.png" #noa added 08.08.24
+        #local_file_path = f"{out_dir}/{img_id}.png" #noa added 08.08.24
         image.save(f"{out_dir}/{img_id}.png")
 
         # Upload to GCS
-        bucket_name = 'make-it-count-orig'  #noa added 08.08.24 - start
-        destination_blob_name = f"{img_id}.png"
-        upload_to_gcs(local_file_path, bucket_name, destination_blob_name) #noa added 08.08.24 - end
+        #bucket_name = 'make-it-count-orig'  #noa added 08.08.24 - start
+        #destination_blob_name = f"{img_id}.png"
+        #upload_to_gcs(local_file_path, bucket_name, destination_blob_name) #noa added 08.08.24 - end
         
         vanilla_img.save(f"{out_dir}/{img_id}_vanilla.png")
         metadata_item = {
