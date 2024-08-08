@@ -53,8 +53,8 @@ def init_sdxl_model(config):
     device = torch.device(config["pipeline"]["device"])
     sdxl_pipe.to(device)
 
-    sdxl_pipe.gradient_checkpointing_enable()  # Enable gradient checkpointing, added by noa 08.08.24
-    cpu_offload(sdxl_pipe)  # Offload model to CPU, added by noa 08.08.24
+    #sdxl_pipe.gradient_checkpointing_enable()  # Enable gradient checkpointing, added by noa 08.08.24
+    #cpu_offload(sdxl_pipe)  # Offload model to CPU, added by noa 08.08.24
 
     sdxl_pipe.counting_config = config['counting_model']
 
