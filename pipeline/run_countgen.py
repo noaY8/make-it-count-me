@@ -18,6 +18,9 @@ from tqdm import tqdm
 from torch.cuda.amp import autocast #added by noa 08.08.24
 from accelerate import cpu_offload #added by noa 08.08.24
 
+# Set max split size to reduce fragmentation
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128' # #added by noa 08.08.24
+
 def read_yaml(file_path):
     with open(file_path, "r") as yaml_file:
         yaml_data = yaml.safe_load(yaml_file)
@@ -56,6 +59,9 @@ def init_sdxl_model(config):
 
     device = torch.device(config["pipeline"]["device"])
     sdxl_pipe.to(device)
+    
+    # Set the model to evaluation mode
+    sdxl_pipe.eval()  # added by noa 08.08.24
 
     #sdxl_pipe.gradient_checkpointing_enable()  # Enable gradient checkpointing, added by noa 08.08.24
     #cpu_offload(sdxl_pipe)  # Offload model to CPU, added by noa 08.08.24
@@ -80,6 +86,10 @@ def run_counting_pipeline_corrected_masks(sdxl_pipe, prompt, generator, object_m
                             desired_mask=object_masks,
                             generator=generator,
                             latents=latents).images
+            
+            print("Memory summary after inference:")  # added by noa 08.08.24
+            print(torch.cuda.memory_summary(device='cuda', abbreviated=False))  # added by noa 08.08.24
+
 
     image = out[0]
     return image
