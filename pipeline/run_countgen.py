@@ -23,10 +23,10 @@ def read_yaml(file_path):
         yaml_data = yaml.safe_load(yaml_file)
     return yaml_data
 
-def move_model_to_cpu(model): #added by noa 08.08.24
-    for module in model.modules():
-        if hasattr(module, 'to'):
-            module.to('cpu')
+#def move_model_to_cpu(model): #added by noa 08.08.24
+#    for module in model.modules():
+#        if hasattr(module, 'to'):
+#            module.to('cpu')
             
 def set_seed(seed: int):
     """
@@ -60,7 +60,7 @@ def init_sdxl_model(config):
     #sdxl_pipe.gradient_checkpointing_enable()  # Enable gradient checkpointing, added by noa 08.08.24
     #cpu_offload(sdxl_pipe)  # Offload model to CPU, added by noa 08.08.24
 
-    move_model_to_cpu(sdxl_pipe) #added by noa 08.08.24
+    #move_model_to_cpu(sdxl_pipe) #added by noa 08.08.24
 
     sdxl_pipe.counting_config = config['counting_model']
 
