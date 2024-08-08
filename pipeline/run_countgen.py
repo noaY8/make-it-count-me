@@ -17,9 +17,19 @@ from utils.generate_random_masks import generate_random_masks_factory, show_mask
 from tqdm import tqdm
 from torch.cuda.amp import autocast #added by noa 08.08.24
 from accelerate import cpu_offload #added by noa 08.08.24
+from google.cloud import storage #added by noa 08.08.24
 
 # Set max split size to reduce fragmentation
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128' # #added by noa 08.08.24
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128' #added by noa 08.08.24
+
+def upload_to_gcs(local_file_path, bucket_name, destination_blob_name): #added by noa 08.08.24 - start
+    """Uploads a file to the bucket."""
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(local_file_path)
+
+    print(f"File {local_file_path} uploaded to {destination_blob_name}.") #added by noa 08.08.24 - end
 
 def read_yaml(file_path):
     with open(file_path, "r") as yaml_file:
@@ -155,8 +165,15 @@ def run_pipeline(prompt_objects, config, phase1_type, phase2_type):
                                                               config)
             elif phase2_type == 'vanilla':
                 pass
-
+                
+        local_file_path = f"{out_dir}/{img_id}.png" #noa added 08.08.24
         image.save(f"{out_dir}/{img_id}.png")
+
+        # Upload to GCS
+        bucket_name = 'make-it-count-orig'  #noa added 08.08.24 - start
+        destination_blob_name = f"{img_id}.png"
+        upload_to_gcs(local_file_path, bucket_name, destination_blob_name) #noa added 08.08.24 - end
+        
         vanilla_img.save(f"{out_dir}/{img_id}_vanilla.png")
         metadata_item = {
             'id': img_id,
