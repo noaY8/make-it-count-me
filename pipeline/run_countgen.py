@@ -15,7 +15,8 @@ import os
 from pipeline.self_counting_sdxl_pipeline import SelfCountingSDXLPipeline
 from utils.generate_random_masks import generate_random_masks_factory, show_mask, show_mask_list
 from tqdm import tqdm
-
+from torch.cuda.amp import autocast #added by noa 08.08.24
+from accelerate import cpu_offload #added by noa 08.08.24
 
 def read_yaml(file_path):
     with open(file_path, "r") as yaml_file:
@@ -52,6 +53,9 @@ def init_sdxl_model(config):
     device = torch.device(config["pipeline"]["device"])
     sdxl_pipe.to(device)
 
+    sdxl_pipe.gradient_checkpointing_enable()  # Enable gradient checkpointing, added by noa 08.08.24
+    cpu_offload(sdxl_pipe)  # Offload model to CPU, added by noa 08.08.24
+
     sdxl_pipe.counting_config = config['counting_model']
 
     if config['counting_model']['use_ddpm']:
@@ -63,12 +67,13 @@ def init_sdxl_model(config):
 
 def run_counting_pipeline_corrected_masks(sdxl_pipe, prompt, generator, object_masks, latents, config):
     with torch.no_grad(): #added by noa 08.08.24
-        out = sdxl_pipe(prompt=[prompt],
-                        num_inference_steps=config["counting_model"]["num_inference_steps"],
-                        perform_counting=True,
-                        desired_mask=object_masks,
-                        generator=generator,
-                        latents=latents).images
+        with autocast(): #added by noa 08.08.24
+            out = sdxl_pipe(prompt=[prompt],
+                            num_inference_steps=config["counting_model"]["num_inference_steps"],
+                            perform_counting=True,
+                            desired_mask=object_masks,
+                            generator=generator,
+                            latents=latents).images
 
     image = out[0]
     return image
@@ -149,8 +154,13 @@ def run_pipeline(prompt_objects, config, phase1_type, phase2_type):
 
         with open(f"{out_dir}/metadata.json", "w") as f:
             json.dump(metadata_json, f, indent=4)
-
-        torch.cuda.empty_cache() #added by noa - 08.08.24
+            
+        # Clear cache and delete variables to save memory, Added by Noa - 08.08.24
+        del prompt, seed, generator, shape, latents, required_object_num, obj_name, img_id, vanilla_img, object_masks 
+        torch.cuda.empty_cache()  # Added by Noa - 08.08.24
+            
+    torch.cuda.empty_cache() #added by noa - 08.08.24
+        
 def parse_arguments():
     parser = argparse.ArgumentParser(description="config")
     parser.add_argument("--prompt", type=str, default="A photo of six kittens sitting on a branch")
