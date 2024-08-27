@@ -1,0 +1,37 @@
+[
+    {
+        "id": "dogs_num=3_seed=1",
+        "prompt": "A photo of three dogs sitting on the grass",
+        "seed": 1,
+        "obj_class": "dogs",
+        "requiered_object_num": 3
+    },
+    {
+        "id": "balls_num=2_seed=1",
+        "prompt": "A photo of two balls in the air",
+        "seed": 1,
+        "obj_class": "balls",
+        "requiered_object_num": 2
+    },
+    {
+        "id": "birds_num=3_seed=1",
+        "prompt": "A photo of three birds sitting on a tree",
+        "seed": 1,
+        "obj_class": "birds",
+        "requiered_object_num": 3
+    },
+    {
+        "id": "dogs_num=2_seed=1",
+        "prompt": "A photo of two dogs sitting on the grass",
+        "seed": 1,
+        "obj_class": "dogs",
+        "requiered_object_num": 2
+    },
+    {
+        "id": "cats_num=2_seed=1",
+        "prompt": "A photo of two cats sitting on the grass",
+        "seed": 1,
+        "obj_class": "cats",
+        "requiered_object_num": 2
+    }
+]
