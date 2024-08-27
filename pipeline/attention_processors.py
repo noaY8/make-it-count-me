@@ -36,24 +36,35 @@ class CountingProcessor:
              and self.attnstore.masking_dict['start_step'] <= self.attnstore.curr_step_index <=
              self.attnstore.masking_dict['end_step']
              and 'up' in self.place_in_unet):
-                
+
+            #--------------------------------------------------------------------------------Noa added 27/8/24 - START 
             max_blob_index = torch.max(self.attnstore.desired_mask).int().item()
-            attention_probs = attention_probs.view(40, attn_dim, attn_dim, attn_dim**2)
-           
-            blob_coordinates = torch.zeros((attn_dim, attn_dim), device=attention_probs.device)
+            blob_coordinates = (self.attnstore.desired_mask.unsqueeze(0) == torch.arange(max_blob_index + 1, device=attention_probs.device).unsqueeze(1).unsqueeze(2)).any(dim=0)
 
-            for j in range(0, max_blob_index + 1):
-                    current_blob_mask = self.attnstore.desired_mask == j
-                    indices = current_blob_mask.nonzero(as_tuple=False)
-                    if len(indices) > 0:
-                        # Update blob_coordinates tensor
-                        blob_coordinates[indices[:, 0], indices[:, 1]] = 1
-
-            # Flatten the blob_coordinates for easier indexing
             blob_coordinates_flat = blob_coordinates.view(-1).bool()
 
-            # Find indices of the blob to modify in attention_probs
             blobs_indexes = (self.attnstore.desired_mask == 0).nonzero(as_tuple=False)
+            #--------------------------------------------------------------------------------Noa added 27/8/24 - END 
+
+            #--------------------------------------------------------------------------------Noa removed 27/8/24 - START           
+            # max_blob_index = torch.max(self.attnstore.desired_mask).int().item()
+            # attention_probs = attention_probs.view(40, attn_dim, attn_dim, attn_dim**2)
+              
+            # blob_coordinates = torch.zeros((attn_dim, attn_dim), device=attention_probs.device)
+
+            # for j in range(0, max_blob_index + 1):
+            #         current_blob_mask = self.attnstore.desired_mask == j
+            #         indices = current_blob_mask.nonzero(as_tuple=False)
+            #         if len(indices) > 0:
+            #             # Update blob_coordinates tensor
+            #             blob_coordinates[indices[:, 0], indices[:, 1]] = 1
+
+            # # Flatten the blob_coordinates for easier indexing
+            # blob_coordinates_flat = blob_coordinates.view(-1).bool()
+
+            # # Find indices of the blob to modify in attention_probs
+            # blobs_indexes = (self.attnstore.desired_mask == 0).nonzero(as_tuple=False)
+            #--------------------------------------------------------------------------------Noa removed 27/8/24 - END   
 
             for idx in blobs_indexes:
                 x, y = idx[0], idx[1]

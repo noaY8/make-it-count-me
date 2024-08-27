@@ -1,0 +1,62 @@
+[
+    {
+        "prompt": "A photo of three ties on the ground",
+        "object": "tie",
+        "object_plural": "ties",
+        "object_id": 27,
+        "scene": "on the ground",
+        "number": "three",
+        "int_number": 3,
+        "seed": 591907
+    },
+    {
+        "prompt": "A photo of two sports balls",
+        "object": "sports ball",
+        "object_plural": "sports balls",
+        "object_id": 32,
+        "scene": "",
+        "number": "two",
+        "int_number": 2,
+        "seed": 412937
+    },    
+    {
+        "prompt": "A photo of four donuts on the road",
+        "object": "donut",
+        "object_plural": "donuts",
+        "object_id": 54,
+        "scene": "on the road",
+        "number": "four",
+        "int_number": 4,
+        "seed": 470332
+    },
+    {
+        "prompt": "A photo of five cows on the ground",
+        "object": "cow",
+        "object_plural": "cows",
+        "object_id": 19,
+        "scene": "on the ground",
+        "number": "five",
+        "int_number": 5,
+        "seed": 749109
+    },
+    {
+        "prompt": "A photo of three elephants on the grass",
+        "object": "elephant",
+        "object_plural": "elephants",
+        "object_id": 20,
+        "scene": "on the grass",
+        "number": "three",
+        "int_number": 3,
+        "seed": 946875
+    },
+    {
+        "prompt": "A photo of three elephants",
+        "object": "elephant",
+        "object_plural": "elephants",
+        "object_id": 20,
+        "scene": "",
+        "number": "three",
+        "int_number": 3,
+        "seed": 417284
+    }
+]

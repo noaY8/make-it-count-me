@@ -1,0 +1,22 @@
+[
+    {
+        "prompt": "A photo of two sports balls",
+        "object": "sports ball",
+        "object_plural": "sports balls",
+        "object_id": 32,
+        "scene": "",
+        "number": "two",
+        "int_number": 2,
+        "seed": 412937
+    },
+    {
+        "prompt": "A photo of four donuts on the road",
+        "object": "donut",
+        "object_plural": "donuts",
+        "object_id": 54,
+        "scene": "on the road",
+        "number": "four",
+        "int_number": 4,
+        "seed": 470332
+    }
+]

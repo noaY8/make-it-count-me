@@ -17,10 +17,14 @@ from utils.generate_random_masks import generate_random_masks_factory, show_mask
 from tqdm import tqdm
 from torch.cuda.amp import autocast #added by noa 08.08.24
 from accelerate import cpu_offload #added by noa 08.08.24
-#from google.cloud import storage #added by noa 08.08.24
+#from google.cloud import storage
+import gc  #added by noa 27.08.24
 
 # Set max split size to reduce fragmentation
-os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128' #added by noa 08.08.24
+#torch.cuda.set_per_process_memory_fraction(0.95)
+#torch.cuda.set_max_split_size_mb(64)  # Adjust the value as needed
+#os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:64' #added by noa 08.08.24
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:32"
 
 def upload_to_gcs(local_file_path, bucket_name, destination_blob_name): #added by noa 08.08.24 - start
     """Uploads a file to the bucket."""
@@ -120,6 +124,17 @@ def run_pipeline(prompt_objects, config, phase1_type, phase2_type):
     sdxl_pipe, device = init_sdxl_model(config)
 
     for prompt_object in tqdm(prompt_objects, desc="Iterating prompt dataset"):
+        #---------------------------------------------------------------------------noa changed start
+        # Change 1: Check available GPU memory before processing
+        torch.cuda.empty_cache()  # Clear cache to get an accurate memory reading
+        torch.cuda.synchronize()  # Ensure all kernels have finished
+        available_memory = torch.cuda.get_device_properties(0).total_memory - torch.cuda.memory_allocated()
+
+        if available_memory < 80 * 1024 * 1024:  # 80 MB threshold
+            print(f"Skipping sample due to low memory. Available: {available_memory / (1024 * 1024)} MB")
+            continue
+        #---------------------------------------------------------------------------noa changed end
+
         prompt = prompt_object['prompt']
         seed = prompt_object['seed']
 
@@ -149,11 +164,11 @@ def run_pipeline(prompt_objects, config, phase1_type, phase2_type):
             vanilla_masks, correct_number_mask, object_masks, vanilla_img, obj_num_match = relayout(sdxl_pipe, prompt,
                                                                                                     required_object_num,
                                                                                                     config, seed)
-            show_mask_list([vanilla_masks, correct_number_mask, object_masks],
-                           titles=[f'Vanilla mask: {int(vanilla_masks.max())}',
-                                   f'Correct number mask: {int(correct_number_mask.max())}',
-                                   f'Postprocess mask: {int(object_masks.max())}'],
-                           save_path=f"{config['pipeline']['output_path']}/{img_id}_masks.png")
+            # show_mask_list([vanilla_masks, correct_number_mask, object_masks],
+            #                titles=[f'Vanilla mask: {int(vanilla_masks.max())}',
+            #                        f'Correct number mask: {int(correct_number_mask.max())}',
+            #                        f'Postprocess mask: {int(object_masks.max())}'],
+            #                save_path=f"{config['pipeline']['output_path']}/{img_id}_masks.png") #noa removed
         elif phase1_type == 'no_mask':
             object_masks = None
 
@@ -173,26 +188,34 @@ def run_pipeline(prompt_objects, config, phase1_type, phase2_type):
         #bucket_name = 'make-it-count-orig'  #noa added 08.08.24 - start
         #destination_blob_name = f"{img_id}.png"
         #upload_to_gcs(local_file_path, bucket_name, destination_blob_name) #noa added 08.08.24 - end
-        
-        vanilla_img.save(f"{out_dir}/{img_id}_vanilla.png")
-        metadata_item = {
-            'id': img_id,
-            'prompt': prompt,
-            'seed': seed,
-            'obj_class': obj_name,
-            'requiered_object_num': required_object_num
-        }
 
-        metadata_json.append(metadata_item)
+        #--------------------------   Noa removed START    
 
-        with open(f"{out_dir}/metadata.json", "w") as f:
-            json.dump(metadata_json, f, indent=4)
-            
-        # Clear cache and delete variables to save memory, Added by Noa - 08.08.24
-        del prompt, seed, generator, shape, latents, required_object_num, obj_name, img_id, vanilla_img, object_masks 
-        torch.cuda.empty_cache()  # Added by Noa - 08.08.24
-            
-    torch.cuda.empty_cache() #added by noa - 08.08.24
+        # vanilla_img.save(f"{out_dir}/{img_id}_vanilla.png")
+        # metadata_item = {
+        #     'id': img_id,
+        #     'prompt': prompt,
+        #     'seed': seed,
+        #     'obj_class': obj_name,
+        #     'requiered_object_num': required_object_num
+        # }
+
+        # metadata_json.append(metadata_item)
+
+        # with open(f"{out_dir}/metadata.json", "w") as f:
+        #     json.dump(metadata_json, f, indent=4)
+
+        #--------------------------   Noa removed END 
+
+        #--------------------------   Noa added START 
+        # Change 2: Clear cache and delete variables to save memory
+        del prompt, seed, generator, shape, latents, required_object_num, obj_name, img_id, vanilla_img
+        torch.cuda.empty_cache()
+        gc.collect()  # Garbage collection to free up CPU memory
+
+    torch.cuda.empty_cache()
+    gc.collect()  # Final garbage collection after loop ends
+    #--------------------------   Noa added END 
         
 def parse_arguments():
     parser = argparse.ArgumentParser(description="config")
@@ -206,6 +229,8 @@ def parse_arguments():
 
 
 if __name__ == "__main__":
+    more_then_one = True
+
     args = parse_arguments()
 
     config = read_yaml(args.config)
@@ -225,8 +250,15 @@ if __name__ == "__main__":
             "int_number": word2number.get(int_number, 0),
             "seed": args.seed
         }, ]
+        print(prompt_objects)
 
     phase1_type = config['pipeline']['phase1_type']
     phase2_type = config['pipeline']['phase2_type']
 
+    # if more_then_one:
+    #     for promt_object in prompt_objects:
+    #         print(promt_object)
+    #         run_pipeline(promt_object, config, phase1_type, phase2_type)
+    # else:
+    #     run_pipeline(prompt_objects, config, phase1_type, phase2_type)
     run_pipeline(prompt_objects, config, phase1_type, phase2_type)

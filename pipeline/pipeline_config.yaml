@@ -13,7 +13,7 @@ mask_creation:
     shape: "circle" # options: circle, square
 
 counting_model:
-  use_ddpm: True
+  use_ddpm: False #True
   num_inference_steps: 50
 
   attention_store:

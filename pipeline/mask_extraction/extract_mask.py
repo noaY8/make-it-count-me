@@ -42,5 +42,49 @@ def relayout(sdxl_pipe, prompt, required_object_num, config, seed):
 
     return vanilla_masks, correct_number_mask, post_process_mask, vanilla_img, obj_num_match
 
+#noa added
+# def relayout(sdxl_pipe, prompt, required_object_num, config, seed):
+#     # Run vanilla + dbscan
+#     obj_num_match = False
 
+#     vanilla_masks, n_dbscan_clusters, vanilla_img = dbscan_extract_mask(prompt, sdxl_pipe, config, seed)
+#     vanilla_masks, number_object_remain = remove_sparse_blobs(vanilla_masks)
+#     n_dbscan_clusters = number_object_remain
+
+#     # Fix: Using clone().detach() to avoid warnings
+#     vanilla_masks = vanilla_masks.clone().detach().to(dtype=torch.float16).view(32, 32)
+#     vanilla_masks += 1
+
+#     # Initialize correct_number_mask to ensure it's always defined
+#     correct_number_mask = torch.zeros_like(vanilla_masks)
+
+#     if n_dbscan_clusters == 0:  # If no object is found, add a single object in the center
+#         vanilla_masks[13:19, 13:19] = 1
+#         n_dbscan_clusters = 1
+
+#     if n_dbscan_clusters == required_object_num:
+#         correct_number_mask = vanilla_masks
+#         obj_num_match = True
+#     else:
+#         torch_object_masks = to_channels(vanilla_masks)
+
+#         if n_dbscan_clusters > required_object_num:
+#             object_masks = relayout_overgeneration(torch_object_masks, n_dbscan_clusters - required_object_num)
+#         elif n_dbscan_clusters < required_object_num:
+#             object_masks = relayout_undergeneration(
+#                 torch_object_masks,
+#                 number_of_clusters_founded=n_dbscan_clusters,
+#                 desired_number_of_clusters=required_object_num,
+#                 config=config
+#             )
+
+#         correct_number_mask = from_channels(object_masks)
+
+#     post_process_mask = run_postprocess(correct_number_mask)
+
+#     # Ensure freeing memory of intermediate results
+#     del torch_object_masks, object_masks
+#     torch.cuda.empty_cache()
+
+#     return vanilla_masks, correct_number_mask, post_process_mask, vanilla_img, obj_num_match
 
